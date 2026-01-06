@@ -1,31 +1,137 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getLoginUrl } from "@/const";
-import { Streamdown } from 'streamdown';
+import { Users, Scroll, Swords, BookOpen } from "lucide-react";
+import { useLocation } from "wouter";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
-  // The userAuth hooks provides authentication state
-  // To implement login/logout functionality, simply call logout() or redirect to getLoginUrl()
-  let { user, loading, error, isAuthenticated, logout } = useAuth();
+  const { user, loading } = useAuth();
+  const [, navigate] = useLocation();
 
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="container py-16">
+          <div className="max-w-3xl mx-auto text-center">
+            <h1 className="text-5xl font-bold text-foreground mb-6">
+              D&D Companion
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8">
+              Your AI-powered assistant for Dungeons & Dragons adventures. Create characters, 
+              manage campaigns, and let AI bring your game to life.
+            </p>
+            <Button size="lg" asChild>
+              <a href={getLoginUrl()}>Get Started</a>
+            </Button>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6 mt-16 max-w-4xl mx-auto">
+            <Card>
+              <CardHeader>
+                <Users className="h-10 w-10 text-primary mb-2" />
+                <CardTitle>Character Creation</CardTitle>
+                <CardDescription>
+                  Build detailed D&D 5e characters with full rule support
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <Scroll className="h-10 w-10 text-primary mb-2" />
+                <CardTitle>AI Roleplay</CardTitle>
+                <CardDescription>
+                  Characters respond in-character using personality and context
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <Swords className="h-10 w-10 text-primary mb-2" />
+                <CardTitle>Campaign Management</CardTitle>
+                <CardDescription>
+                  Track sessions, NPCs, locations, and plot points
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <BookOpen className="h-10 w-10 text-primary mb-2" />
+                <CardTitle>DM Mode</CardTitle>
+                <CardDescription>
+                  Let AI act as dungeon master and narrate scenarios
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <main>
-        {/* Example: lucide-react for icons */}
-        <Loader2 className="animate-spin" />
-        Example Page
-        {/* Example: Streamdown for markdown rendering */}
-        <Streamdown>Any **markdown** content</Streamdown>
-        <Button variant="default">Example Button</Button>
-      </main>
+    <div className="min-h-screen bg-background">
+      <div className="container py-16">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-4xl font-bold text-foreground mb-2">
+            Welcome back, {user.name || "Adventurer"}!
+          </h1>
+          <p className="text-muted-foreground mb-12">
+            What would you like to do today?
+          </p>
+
+          <div className="grid gap-6">
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/characters")}>
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  <Users className="h-10 w-10 text-primary flex-shrink-0" />
+                  <div>
+                    <CardTitle>My Characters</CardTitle>
+                    <CardDescription>
+                      View and manage your character roster
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/campaigns")}>
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  <Swords className="h-10 w-10 text-primary flex-shrink-0" />
+                  <div>
+                    <CardTitle>My Campaigns</CardTitle>
+                    <CardDescription>
+                      Manage your adventures and sessions
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate("/characters/create")}>
+              <CardHeader>
+                <div className="flex items-start gap-4">
+                  <Scroll className="h-10 w-10 text-primary flex-shrink-0" />
+                  <div>
+                    <CardTitle>Create Character</CardTitle>
+                    <CardDescription>
+                      Build a new D&D 5e character
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
