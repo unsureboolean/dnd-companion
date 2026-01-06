@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import NavHeader from "@/components/NavHeader";
 import { useLocation, useParams } from "wouter";
-import { Loader2, Heart, Shield, Sword, Edit2, Save, X, Sparkles, ArrowLeft, Bot } from "lucide-react";
+import { Loader2, Heart, Shield, Sword, Edit2, Save, X, Sparkles, ArrowLeft, Bot, Wand2, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { calculateModifier, calculateProficiencyBonus, SKILL_ABILITY_MAP } from "../../../shared/dnd5eData";
@@ -75,6 +75,37 @@ export default function CharacterSheet() {
       toast.error(`Failed to delete: ${error.message}`);
     },
   });
+
+  const generateBackstoryMutation = trpc.characterGenerator.generateBackstory.useMutation({
+    onSuccess: (data) => {
+      // Update character with new backstory
+      updateMutation.mutate({
+        id: character!.id,
+        personality: data.personality,
+        backstory: data.backstory,
+        ideals: data.ideals,
+        bonds: data.bonds,
+        flaws: data.flaws,
+      });
+      toast.success("Backstory generated!");
+    },
+    onError: (error) => {
+      toast.error(`Failed to generate backstory: ${error.message}`);
+    },
+  });
+
+  const handleGenerateBackstory = () => {
+    if (!character) return;
+    generateBackstoryMutation.mutate({
+      name: character.name,
+      race: character.race,
+      characterClass: character.characterClass,
+      background: character.background,
+      alignment: character.alignment || "True Neutral",
+      existingBackstory: character.backstory || undefined,
+      personality: character.personality || undefined,
+    });
+  };
 
   if (authLoading || isLoading) {
     return (
@@ -354,6 +385,45 @@ export default function CharacterSheet() {
           </TabsContent>
 
           <TabsContent value="personality" className="space-y-6">
+            {/* AI Backstory Generation */}
+            <Card className="border-amber-200 dark:border-amber-800 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950 dark:to-orange-950">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-amber-900 dark:text-amber-100">
+                  <Wand2 className="h-5 w-5 text-amber-600" />
+                  AI Backstory Generator
+                </CardTitle>
+                <CardDescription className="text-amber-700 dark:text-amber-300">
+                  {character.backstory 
+                    ? "Expand and enrich your character's existing backstory with AI" 
+                    : "Generate a rich, detailed backstory for your character"}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  onClick={handleGenerateBackstory}
+                  disabled={generateBackstoryMutation.isPending}
+                  className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white"
+                >
+                  {generateBackstoryMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Generating...
+                    </>
+                  ) : character.backstory ? (
+                    <>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Expand Backstory
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generate Backstory
+                    </>
+                  )}
+                </Button>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Personality Traits</CardTitle>

@@ -77,3 +77,26 @@
 - [x] Enhance D&D themed styling (parchment textures, medieval fonts, fantasy elements)
 - [x] Add decorative borders and icons
 - [x] Improve overall fantasy aesthetic
+
+## Phase 9: AI Character Generation
+
+### AI-Powered Character Generator
+- [x] Create AI endpoint for generating character details from minimal input
+- [x] Generate random names based on race if not provided
+- [x] Auto-select race, class, background if not specified
+- [x] Generate ability scores with appropriate distribution for class
+- [x] Select skills based on class and background
+- [x] Generate equipment loadout
+
+### Rich Backstory Generation
+- [x] Create AI backstory generator that creates 3-5 paragraph backstories
+- [x] Include personality traits, ideals, bonds, and flaws
+- [x] Add character quirks and mannerisms
+- [x] Generate origin story based on race, class, and background
+- [x] Add backstory expansion button to existing characters
+
+### Quick Generate UI
+- [x] Add "Quick Generate" option on character creation page
+- [x] Allow partial input (e.g., just name, or just class)
+- [x] Show AI-generated preview before saving
+- [x] Add "Regenerate" button for individual sections

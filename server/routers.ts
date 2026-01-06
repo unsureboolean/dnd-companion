@@ -7,11 +7,13 @@ import * as db from "./db";
 import { TRPCError } from "@trpc/server";
 import { aiRouter } from "./aiRouter";
 import { multiCharacterRouter } from "./multiCharacterRouter";
+import { characterGeneratorRouter } from "./characterGeneratorRouter";
 
 export const appRouter = router({
   system: systemRouter,
   ai: aiRouter,
   multiCharacter: multiCharacterRouter,
+  characterGenerator: characterGeneratorRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
