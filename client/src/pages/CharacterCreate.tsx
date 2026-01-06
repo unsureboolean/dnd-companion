@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import NavHeader from "@/components/NavHeader";
 import { 
   RACES, 
   CLASSES, 
@@ -198,11 +199,12 @@ export default function CharacterCreate() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50 dark:from-amber-950 dark:via-orange-950 dark:to-red-950">
+      <NavHeader />
+      <div className="container max-w-4xl py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-foreground mb-2">Create Your Character</h1>
-          <p className="text-muted-foreground">Step {step} of 4</p>
+          <h1 className="text-3xl md:text-4xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-2">Create Your Character</h1>
+          <p className="text-amber-700 dark:text-amber-300">Step {step} of 4</p>
         </div>
 
         {step === 1 && (

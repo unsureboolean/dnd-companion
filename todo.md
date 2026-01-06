@@ -47,3 +47,33 @@
 - [x] Write vitest tests for context retrieval
 - [x] Test complete user workflows
 - [x] Create checkpoint and deliver
+
+## Phase 8: User Requested Enhancements
+
+### Expanded 5e Content
+- [x] Add more races (Tabaxi, Genasi, Aasimar, Firbolg, Goliath, Kenku, Lizardfolk, Triton, etc.)
+- [x] Add subclasses for each class
+- [x] Add spell management system with spell slots
+
+### Dice Rolling System
+- [x] Implement virtual dice roller (d4, d6, d8, d10, d12, d20, d100)
+- [x] Add roll history
+- [x] Include automatic modifier calculations
+- [x] Add advantage/disadvantage rolling
+
+### Initiative Tracker
+- [x] Build combat initiative tracker
+- [x] Add turn order management
+- [x] Include HP tracking for combatants
+- [x] Add condition/status effect monitoring
+- [x] Integrate with DM AI mode
+
+### Navigation & UX
+- [x] Add persistent navigation header/back button
+- [x] Add AI control toggle on home screen character list
+- [x] Improve page-to-page navigation flow
+
+### Visual Design
+- [x] Enhance D&D themed styling (parchment textures, medieval fonts, fantasy elements)
+- [x] Add decorative borders and icons
+- [x] Improve overall fantasy aesthetic

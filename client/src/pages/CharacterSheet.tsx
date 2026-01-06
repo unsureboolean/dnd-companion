@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
+import NavHeader from "@/components/NavHeader";
 import { useLocation, useParams } from "wouter";
-import { Loader2, Heart, Shield, Sword, Edit2, Save, X } from "lucide-react";
+import { Loader2, Heart, Shield, Sword, Edit2, Save, X, Sparkles, ArrowLeft, Bot } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { calculateModifier, calculateProficiencyBonus, SKILL_ABILITY_MAP } from "../../../shared/dnd5eData";
@@ -77,24 +78,36 @@ export default function CharacterSheet() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950">
+        <NavHeader />
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <div className="text-center">
+            <Sparkles className="h-12 w-12 text-amber-600 animate-pulse mx-auto mb-4" />
+            <p className="text-amber-800 dark:text-amber-200 font-serif">Loading character...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!user || !character) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Character Not Found</CardTitle>
-            <CardDescription>This character does not exist or you don't have access</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/characters")}>Back to Characters</Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950">
+        <NavHeader />
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <Card className="max-w-md border-2 border-amber-800/20">
+            <CardHeader>
+              <CardTitle className="font-serif text-amber-900 dark:text-amber-100">Character Not Found</CardTitle>
+              <CardDescription>This character does not exist or you don't have access</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/characters")} className="bg-amber-700 hover:bg-amber-800">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Characters
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
@@ -150,8 +163,9 @@ export default function CharacterSheet() {
   };
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container max-w-6xl">
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50 dark:from-amber-950 dark:via-orange-950 dark:to-red-950">
+      <NavHeader />
+      <div className="container max-w-6xl py-8">
         <div className="flex justify-between items-start mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">

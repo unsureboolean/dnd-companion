@@ -7,8 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { trpc } from "@/lib/trpc";
+import NavHeader from "@/components/NavHeader";
+import InitiativeTracker from "@/components/InitiativeTracker";
+import DiceRoller from "@/components/DiceRoller";
 import { useParams, useLocation } from "wouter";
-import { Loader2, Send, Plus, Trash2 } from "lucide-react";
+import { Loader2, Send, Plus, Trash2, Sparkles, ArrowLeft, Swords } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Streamdown } from "streamdown";
@@ -153,47 +156,68 @@ export default function CampaignDetail() {
 
   if (authLoading || campaignLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950">
+        <NavHeader />
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <div className="text-center">
+            <Sparkles className="h-12 w-12 text-amber-600 animate-pulse mx-auto mb-4" />
+            <p className="text-amber-800 dark:text-amber-200 font-serif">Loading campaign...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!user || !campaign) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="max-w-md">
-          <CardHeader>
-            <CardTitle>Campaign Not Found</CardTitle>
-            <CardDescription>This campaign does not exist or you don't have access</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/campaigns")}>Back to Campaigns</Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-gradient-to-b from-amber-50 to-orange-100 dark:from-amber-950 dark:to-orange-950">
+        <NavHeader />
+        <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
+          <Card className="max-w-md border-2 border-amber-800/20">
+            <CardHeader>
+              <CardTitle className="font-serif text-amber-900 dark:text-amber-100">Campaign Not Found</CardTitle>
+              <CardDescription>This campaign does not exist or you don't have access</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate("/campaigns")} className="bg-amber-700 hover:bg-amber-800">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Campaigns
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background py-8">
-      <div className="container max-w-6xl">
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">{campaign.name}</h1>
-            <p className="text-muted-foreground">{campaign.description || "No description"}</p>
+    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-orange-50 to-red-50 dark:from-amber-950 dark:via-orange-950 dark:to-red-950">
+      <NavHeader />
+      <div className="container max-w-7xl py-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-8">
+          <div className="flex items-start gap-4">
+            <div className="h-14 w-14 rounded-lg bg-gradient-to-br from-emerald-600 to-teal-600 flex items-center justify-center shadow-lg">
+              <Swords className="h-7 w-7 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-serif font-bold text-amber-900 dark:text-amber-100 mb-1">{campaign.name}</h1>
+              <p className="text-amber-700 dark:text-amber-300">{campaign.description || "No description"}</p>
+            </div>
           </div>
-          <Button variant="destructive" onClick={handleDeleteCampaign}>
+          <Button variant="destructive" onClick={handleDeleteCampaign} className="bg-red-700 hover:bg-red-800">
             Delete Campaign
           </Button>
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="play">DM Mode</TabsTrigger>
-            <TabsTrigger value="characters">Characters</TabsTrigger>
-            <TabsTrigger value="context">Context</TabsTrigger>
-          </TabsList>
+        <div className="grid lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-4 bg-amber-100/50 dark:bg-amber-900/50">
+                <TabsTrigger value="play" className="data-[state=active]:bg-amber-700 data-[state=active]:text-white">DM Mode</TabsTrigger>
+                <TabsTrigger value="combat" className="data-[state=active]:bg-amber-700 data-[state=active]:text-white">Combat</TabsTrigger>
+                <TabsTrigger value="characters" className="data-[state=active]:bg-amber-700 data-[state=active]:text-white">Characters</TabsTrigger>
+                <TabsTrigger value="context" className="data-[state=active]:bg-amber-700 data-[state=active]:text-white">Context</TabsTrigger>
+              </TabsList>
 
           <TabsContent value="play" className="space-y-6">
             <Card>
@@ -409,7 +433,19 @@ export default function CampaignDetail() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Combat Tab with Initiative Tracker */}
+          <TabsContent value="combat" className="space-y-6">
+            <InitiativeTracker />
+          </TabsContent>
         </Tabs>
+          </div>
+
+          {/* Sidebar with Dice Roller */}
+          <div className="lg:col-span-1">
+            <DiceRoller />
+          </div>
+        </div>
       </div>
     </div>
   );
