@@ -100,3 +100,6 @@
 - [x] Allow partial input (e.g., just name, or just class)
 - [x] Show AI-generated preview before saving
 - [x] Add "Regenerate" button for individual sections
+
+## Bug Fixes
+- [x] Fix Create Character feature error (empty Select.Item value issue)

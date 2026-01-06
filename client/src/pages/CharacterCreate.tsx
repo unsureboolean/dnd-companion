@@ -194,10 +194,10 @@ export default function CharacterCreate() {
   const handleQuickGenerate = () => {
     generateCharacterMutation.mutate({
       name: quickName || undefined,
-      race: quickRace || undefined,
-      characterClass: quickClass || undefined,
-      background: quickBackground || undefined,
-      alignment: quickAlignment || undefined,
+      race: quickRace && quickRace !== "_any" ? quickRace : undefined,
+      characterClass: quickClass && quickClass !== "_any" ? quickClass : undefined,
+      background: quickBackground && quickBackground !== "_any" ? quickBackground : undefined,
+      alignment: quickAlignment && quickAlignment !== "_any" ? quickAlignment : undefined,
       generateBackstory: true,
     });
   };
@@ -370,7 +370,7 @@ export default function CharacterCreate() {
                         <SelectValue placeholder="Any race" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any race</SelectItem>
+                        <SelectItem value="_any">Any race</SelectItem>
                         {RACES.map(race => (
                           <SelectItem key={race.name} value={race.name}>{race.name}</SelectItem>
                         ))}
@@ -385,7 +385,7 @@ export default function CharacterCreate() {
                         <SelectValue placeholder="Any class" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any class</SelectItem>
+                        <SelectItem value="_any">Any class</SelectItem>
                         {CLASSES.map(cls => (
                           <SelectItem key={cls.name} value={cls.name}>{cls.name}</SelectItem>
                         ))}
@@ -400,7 +400,7 @@ export default function CharacterCreate() {
                         <SelectValue placeholder="Any background" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any background</SelectItem>
+                        <SelectItem value="_any">Any background</SelectItem>
                         {BACKGROUNDS.map(bg => (
                           <SelectItem key={bg.name} value={bg.name}>{bg.name}</SelectItem>
                         ))}
@@ -415,7 +415,7 @@ export default function CharacterCreate() {
                         <SelectValue placeholder="Any alignment" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Any alignment</SelectItem>
+                        <SelectItem value="_any">Any alignment</SelectItem>
                         {ALIGNMENTS.map(align => (
                           <SelectItem key={align} value={align}>{align}</SelectItem>
                         ))}
