@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
 import NavHeader from "@/components/NavHeader";
 import { useLocation, useParams } from "wouter";
-import { Loader2, Heart, Shield, Sword, Edit2, Save, X, Sparkles, ArrowLeft, Bot, Wand2, RefreshCw } from "lucide-react";
+import { Loader2, Heart, Shield, Sword, Edit2, Save, X, Sparkles, ArrowLeft, Bot, Wand2, RefreshCw, ImagePlus, User } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { calculateModifier, calculateProficiencyBonus, SKILL_ABILITY_MAP } from "../../../shared/dnd5eData";
@@ -73,6 +73,16 @@ export default function CharacterSheet() {
     },
     onError: (error) => {
       toast.error(`Failed to delete: ${error.message}`);
+    },
+  });
+
+  const generatePortraitMutation = trpc.characterGenerator.generatePortrait.useMutation({
+    onSuccess: () => {
+      toast.success("Portrait generated!");
+      utils.characters.get.invalidate({ id: parseInt(id || "0") });
+    },
+    onError: (error) => {
+      toast.error(`Failed to generate portrait: ${error.message}`);
     },
   });
 
@@ -198,17 +208,49 @@ export default function CharacterSheet() {
       <NavHeader />
       <div className="container max-w-6xl py-8">
         <div className="flex justify-between items-start mb-8">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-4xl font-bold text-foreground">{character.name}</h1>
-              {character.isAiControlled && (
-                <Badge variant="secondary">AI Controlled</Badge>
+          <div className="flex gap-6">
+            {/* Portrait Section */}
+            <div className="relative group">
+              {character.portraitUrl ? (
+                <div className="w-32 h-32 rounded-lg overflow-hidden border-2 border-amber-600 shadow-lg">
+                  <img
+                    src={character.portraitUrl}
+                    alt={`${character.name} portrait`}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="w-32 h-32 rounded-lg border-2 border-dashed border-amber-400 bg-amber-100/50 dark:bg-amber-900/50 flex items-center justify-center">
+                  <User className="h-12 w-12 text-amber-400" />
+                </div>
               )}
+              <Button
+                size="sm"
+                variant="secondary"
+                className="absolute -bottom-2 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={() => generatePortraitMutation.mutate({ characterId: character.id })}
+                disabled={generatePortraitMutation.isPending}
+              >
+                {generatePortraitMutation.isPending ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <ImagePlus className="h-3 w-3" />
+                )}
+              </Button>
             </div>
-            <p className="text-lg text-muted-foreground">
-              Level {character.level} {character.race} {character.characterClass}
-            </p>
-            <p className="text-sm text-muted-foreground">{character.background} • {character.alignment}</p>
+            
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-4xl font-bold text-foreground">{character.name}</h1>
+                {character.isAiControlled && (
+                  <Badge variant="secondary">AI Controlled</Badge>
+                )}
+              </div>
+              <p className="text-lg text-muted-foreground">
+                Level {character.level} {character.race} {character.characterClass}
+              </p>
+              <p className="text-sm text-muted-foreground">{character.background} • {character.alignment}</p>
+            </div>
           </div>
           <div className="flex gap-2">
             {!editMode ? (

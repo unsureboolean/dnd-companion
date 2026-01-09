@@ -80,6 +80,9 @@ export const characters = mysqlTable("characters", {
   // AI control flag
   isAiControlled: boolean("isAiControlled").default(false).notNull(),
   
+  // Character portrait URL
+  portraitUrl: text("portraitUrl"),
+  
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { protectedProcedure, router } from "./_core/trpc";
-import { invokeLLM } from "./_core/llm";
+import { invokeOpenAI } from "./openai";
 import { RACES, CLASSES, BACKGROUNDS, ALIGNMENTS, STANDARD_ARRAY, SKILLS } from "../shared/dnd5eData";
 
 // Name generation data by race
@@ -186,30 +186,12 @@ Generate the following in JSON format:
 Make the backstory engaging, specific, and true to the character's race, class, and background. Include dramatic moments and personal details that make them feel like a real person.`;
 
         try {
-          const response = await invokeLLM({
+          const response = await invokeOpenAI({
             messages: [
               { role: "system", content: "You are a creative D&D character backstory writer. Generate detailed, engaging backstories that bring characters to life. Always respond with valid JSON." },
               { role: "user", content: backstoryPrompt },
             ],
-            response_format: {
-              type: "json_schema",
-              json_schema: {
-                name: "character_backstory",
-                strict: true,
-                schema: {
-                  type: "object",
-                  properties: {
-                    personality: { type: "string", description: "2-3 personality traits" },
-                    backstory: { type: "string", description: "3-5 paragraph origin story" },
-                    ideals: { type: "string", description: "Core beliefs" },
-                    bonds: { type: "string", description: "Important connections" },
-                    flaws: { type: "string", description: "Weaknesses or vices" },
-                  },
-                  required: ["personality", "backstory", "ideals", "bonds", "flaws"],
-                  additionalProperties: false,
-                },
-              },
-            },
+            response_format: { type: "json_object" },
           });
           
           const content = response.choices[0]?.message?.content;
@@ -302,7 +284,7 @@ Alignment: ${input.alignment}
 
 Create an engaging origin story with specific details.`;
 
-      const response = await invokeLLM({
+      const response = await invokeOpenAI({
         messages: [
           { role: "system", content: "You are a creative D&D character backstory writer. Generate detailed, engaging backstories that bring characters to life. Always respond with valid JSON." },
           { role: "user", content: expandPrompt + `
@@ -316,25 +298,7 @@ Respond in JSON format:
   "flaws": "Weaknesses or vices"
 }` },
         ],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "character_backstory",
-            strict: true,
-            schema: {
-              type: "object",
-              properties: {
-                personality: { type: "string", description: "2-3 personality traits" },
-                backstory: { type: "string", description: "3-5 paragraph origin story" },
-                ideals: { type: "string", description: "Core beliefs" },
-                bonds: { type: "string", description: "Important connections" },
-                flaws: { type: "string", description: "Weaknesses or vices" },
-              },
-              required: ["personality", "backstory", "ideals", "bonds", "flaws"],
-              additionalProperties: false,
-            },
-          },
-        },
+        response_format: { type: "json_object" },
       });
       
       const content = response.choices[0]?.message?.content;
@@ -343,6 +307,66 @@ Respond in JSON format:
       }
       
       throw new Error("Failed to generate backstory");
+    }),
+
+  /**
+   * Generate a portrait for a character using DALL-E
+   */
+  generatePortrait: protectedProcedure
+    .input(z.object({
+      characterId: z.number(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const { getCharacterById, updateCharacter } = await import("./db");
+      const { generateOpenAIImage, createCharacterPortraitPrompt } = await import("./openai");
+      const { storagePut } = await import("./storage");
+      
+      const character = await getCharacterById(input.characterId);
+      if (!character || character.userId !== ctx.user.id) {
+        const { TRPCError } = await import("@trpc/server");
+        throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+      }
+      
+      // Generate portrait prompt
+      const prompt = createCharacterPortraitPrompt({
+        name: character.name,
+        race: character.race,
+        characterClass: character.characterClass,
+        background: character.background || undefined,
+        alignment: character.alignment || undefined,
+        personality: character.personality || undefined,
+      });
+      
+      // Generate image with DALL-E
+      const imageResponse = await generateOpenAIImage({
+        prompt,
+        size: "1024x1024",
+        quality: "standard",
+        style: "vivid",
+      });
+      
+      const imageUrl = imageResponse.data[0]?.url;
+      if (!imageUrl) {
+        throw new Error("Failed to generate portrait");
+      }
+      
+      // Download the image and upload to S3
+      const axios = (await import("axios")).default;
+      const imageData = await axios.get(imageUrl, { responseType: "arraybuffer" });
+      const buffer = Buffer.from(imageData.data);
+      
+      // Generate a unique filename
+      const filename = `portraits/${character.id}-${Date.now()}.png`;
+      const { url: s3Url } = await storagePut(filename, buffer, "image/png");
+      
+      // Update character with portrait URL
+      await updateCharacter(input.characterId, {
+        portraitUrl: s3Url,
+      });
+      
+      return {
+        portraitUrl: s3Url,
+      };
     }),
 
   /**

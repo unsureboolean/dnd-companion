@@ -2,7 +2,7 @@ import { z } from "zod";
 import { protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import * as db from "./db";
-import { invokeLLM } from "./_core/llm";
+import { invokeOpenAI } from "./openai";
 
 export const aiRouter = router({
   /**
@@ -97,7 +97,7 @@ Stay in character and respond as ${character.name} would, based on their persona
       });
 
       // Get AI response
-      const response = await invokeLLM({ messages });
+      const response = await invokeOpenAI({ messages });
       const messageContent = response.choices[0]?.message?.content;
       const aiResponse = typeof messageContent === 'string' ? messageContent : "I'm not sure how to respond.";
 
@@ -203,7 +203,7 @@ Be creative, descriptive, and fair. Keep the story engaging and respond to playe
       });
 
       // Get AI response
-      const response = await invokeLLM({ messages });
+      const response = await invokeOpenAI({ messages });
       const messageContent = response.choices[0]?.message?.content;
       const aiResponse = typeof messageContent === 'string' ? messageContent : "The dungeon master ponders...";
 

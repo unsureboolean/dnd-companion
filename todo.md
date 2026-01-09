@@ -103,3 +103,14 @@
 
 ## Bug Fixes
 - [x] Fix Create Character feature error (empty Select.Item value issue)
+
+## Phase 10: OpenAI API Integration
+- [x] Create OpenAI LLM wrapper
+- [x] Create OpenAI DALL-E image generation wrapper
+- [x] Request OPENAI_API_KEY from user
+- [x] Update character generator to use OpenAI
+- [x] Update AI router to use OpenAI
+- [x] Update multi-character router to use OpenAI
+- [x] Add character portrait generation feature
+- [x] Add portrait display on character sheet
+- [x] Test all AI features with OpenAI

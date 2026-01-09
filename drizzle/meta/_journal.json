@@ -15,6 +15,13 @@
       "when": 1767720971195,
       "tag": "0001_modern_kree",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1767725774060,
+      "tag": "0002_fancy_mathemanic",
+      "breakpoints": true
     }
   ]
 }
