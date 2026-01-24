@@ -197,11 +197,12 @@ Make the backstory engaging, specific, and true to the character's race, class, 
           const content = response.choices[0]?.message?.content;
           if (content && typeof content === 'string') {
             const parsed = JSON.parse(content);
-            personality = parsed.personality || "";
-            backstory = parsed.backstory || "";
-            ideals = parsed.ideals || "";
-            bonds = parsed.bonds || "";
-            flaws = parsed.flaws || "";
+            // ENSURE ALL FIELDS ARE STRINGS - convert arrays to comma-separated strings
+            personality = Array.isArray(parsed.personality) ? parsed.personality.join(", ") : (parsed.personality || "");
+            backstory = Array.isArray(parsed.backstory) ? parsed.backstory.join(" ") : (parsed.backstory || "");
+            ideals = Array.isArray(parsed.ideals) ? parsed.ideals.join(", ") : (parsed.ideals || "");
+            bonds = Array.isArray(parsed.bonds) ? parsed.bonds.join(", ") : (parsed.bonds || "");
+            flaws = Array.isArray(parsed.flaws) ? parsed.flaws.join(", ") : (parsed.flaws || "");
           }
         } catch (error) {
           console.error("Failed to generate backstory:", error);
@@ -303,7 +304,15 @@ Respond in JSON format:
       
       const content = response.choices[0]?.message?.content;
       if (content && typeof content === 'string') {
-        return JSON.parse(content);
+        const parsed = JSON.parse(content);
+        // ENSURE ALL FIELDS ARE STRINGS - convert arrays to comma-separated strings
+        return {
+          personality: Array.isArray(parsed.personality) ? parsed.personality.join(", ") : (parsed.personality || ""),
+          backstory: Array.isArray(parsed.backstory) ? parsed.backstory.join(" ") : (parsed.backstory || ""),
+          ideals: Array.isArray(parsed.ideals) ? parsed.ideals.join(", ") : (parsed.ideals || ""),
+          bonds: Array.isArray(parsed.bonds) ? parsed.bonds.join(", ") : (parsed.bonds || ""),
+          flaws: Array.isArray(parsed.flaws) ? parsed.flaws.join(", ") : (parsed.flaws || ""),
+        };
       }
       
       throw new Error("Failed to generate backstory");

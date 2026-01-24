@@ -114,3 +114,11 @@
 - [x] Add character portrait generation feature
 - [x] Add portrait display on character sheet
 - [x] Test all AI features with OpenAI
+
+## Phase 11: Simple Password Authentication
+- [ ] Create password-based auth system (password: "jeffisawesome")
+- [ ] Remove Manus OAuth dependencies
+- [ ] Update all protected routes to use password auth
+- [ ] Create login page with password input
+- [ ] Update session management for password auth
+- [ ] Remove OAuth from UI and navigation
