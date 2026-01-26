@@ -129,3 +129,4 @@
 - [ ] Users need dedicated screen with Character Sheet, all dice, list of other character basic info, notes, etc.
 - [ ] DM needs dedicated DM screen with additional info, DM notes, NPC and Dialogue generator, context tracker
 - [ ] Integrate character creation into the the "Characters" tab on the Campaigns page
+- [ ] Allow users to level up their characters, which should sync with DM data
