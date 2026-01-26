@@ -116,9 +116,16 @@
 - [x] Test all AI features with OpenAI
 
 ## Phase 11: Simple Password Authentication
-- [ ] Create password-based auth system (password: "jeffisawesome")
+- [ ] Create account/password-based auth system 
 - [ ] Remove Manus OAuth dependencies
 - [ ] Update all protected routes to use password auth
 - [ ] Create login page with password input
 - [ ] Update session management for password auth
 - [ ] Remove OAuth from UI and navigation
+
+## Phase 12: Feature Expansion
+- [ ] Multiple users linked to campaign/DM
+- [ ] Search filter and sort for campaigns
+- [ ] Users need dedicated screen with Character Sheet, all dice, list of other character basic info, notes, etc.
+- [ ] DM needs dedicated DM screen with additional info, DM notes, NPC and Dialogue generator, context tracker
+- [ ] Integrate character creation into the the "Characters" tab on the Campaigns page
