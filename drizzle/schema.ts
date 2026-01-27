@@ -69,8 +69,12 @@ export const characters = mysqlTable("characters", {
   skills: json("skills"), // skill proficiencies
   savingThrows: json("savingThrows"), // saving throw proficiencies
   equipment: json("equipment"), // list of equipment
-  spells: json("spells"), // list of known spells
+  spells: json("spells"), // list of known spells (spell names/indices)
+  cantrips: json("cantrips"), // list of known cantrips (spell names/indices)
+  spellSlots: json("spellSlots"), // spell slots per level {1: 4, 2: 3, ...}
   features: json("features"), // class/race features
+  abilityScoreImprovements: json("abilityScoreImprovements"), // track ASIs used per level
+  subclass: varchar("subclass", { length: 100 }), // chosen subclass/archetype
   
   // HP and combat
   maxHitPoints: int("maxHitPoints").notNull(),

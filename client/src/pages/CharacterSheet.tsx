@@ -15,6 +15,7 @@ import { calculateModifier, calculateProficiencyBonus, SKILL_ABILITY_MAP } from 
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LevelUpDialog } from "@/components/LevelUpDialog";
 
 export default function CharacterSheet() {
   const { id } = useParams<{ id: string }>();
@@ -255,6 +256,13 @@ export default function CharacterSheet() {
           <div className="flex gap-2">
             {!editMode ? (
               <>
+                {character.level < 20 && (
+                  <LevelUpDialog
+                    characterId={character.id}
+                    currentLevel={character.level}
+                    onLevelUp={() => utils.characters.get.invalidate({ id: parseInt(id || "0") })}
+                  />
+                )}
                 <Button variant="outline" onClick={handleStartEdit}>
                   <Edit2 className="mr-2 h-4 w-4" />
                   Edit

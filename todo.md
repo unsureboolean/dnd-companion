@@ -123,10 +123,20 @@
 - [ ] Update session management for password auth
 - [ ] Remove OAuth from UI and navigation
 
-## Phase 12: Feature Expansion
+## Phase 12: Character Leveling System & Feature Expansion
+
+### Leveling System
+- [x] Integrate D&D 5e API for official spells, cantrips, and class data
+- [x] Create leveling progression data structures
+- [x] Build level-up UI with class feature selection
+- [x] Implement spell and cantrip selection based on class
+- [x] Add ability score improvements at appropriate levels
+- [x] Update character sheet to show progression options
+- [x] Allow users to level up their characters, which syncs with DM data
+
+### Feature Expansion
 - [ ] Multiple users linked to campaign/DM
 - [ ] Search filter and sort for campaigns
 - [ ] Users need dedicated screen with Character Sheet, all dice, list of other character basic info, notes, etc.
 - [ ] DM needs dedicated DM screen with additional info, DM notes, NPC and Dialogue generator, context tracker
-- [ ] Integrate character creation into the the "Characters" tab on the Campaigns page
-- [ ] Allow users to level up their characters, which should sync with DM data
+- [ ] Integrate character creation into the "Characters" tab on the Campaigns page
