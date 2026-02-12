@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 
@@ -34,16 +34,12 @@ describe("Leveling System", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
-    // Mock character data - this would normally come from the database
-    // For now, we'll just test that the endpoint exists and can be called
     try {
-      // This will fail because we don't have a real character, but it tests the endpoint exists
       await caller.leveling.getLevelingOptions({
         characterId: 999,
         targetLevel: 2,
       });
     } catch (error: any) {
-      // Expected to fail with FORBIDDEN since character doesn't exist
       expect(error.code).toBe("FORBIDDEN");
     }
   });
@@ -53,13 +49,11 @@ describe("Leveling System", () => {
     const caller = appRouter.createCaller(ctx);
 
     try {
-      // Try to level up to same level - should fail
       await caller.leveling.getLevelingOptions({
         characterId: 1,
-        targetLevel: 1, // Same as current level
+        targetLevel: 1,
       });
     } catch (error: any) {
-      // Should fail with FORBIDDEN (character doesn't exist) or BAD_REQUEST (level validation)
       expect(["FORBIDDEN", "BAD_REQUEST"]).toContain(error.code);
     }
   });
@@ -71,37 +65,36 @@ describe("Leveling System", () => {
     try {
       await caller.leveling.getLevelingOptions({
         characterId: 1,
-        targetLevel: 21, // Beyond max level
+        targetLevel: 21,
       });
     } catch (error: any) {
-      // Should fail - either character not found or validation error
       expect(["FORBIDDEN", "BAD_REQUEST"]).toContain(error.code);
     }
   });
 
-  it("should return subclass options at level 3", async () => {
+  // These tests call the D&D 5e API which can be slow - increase timeout
+  it("should return subclass options at level 3", { timeout: 15000 }, async () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
     try {
-      // This will fail because character doesn't exist, but tests the endpoint logic
       await caller.leveling.getLevelingOptions({
         characterId: 1,
-        targetLevel: 3, // Subclass selection level
+        targetLevel: 3,
       });
     } catch (error: any) {
       expect(error.code).toBe("FORBIDDEN");
     }
   });
 
-  it("should return ASI options at level 4", async () => {
+  it("should return ASI options at level 4", { timeout: 15000 }, async () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
     try {
       await caller.leveling.getLevelingOptions({
         characterId: 1,
-        targetLevel: 4, // ASI level
+        targetLevel: 4,
       });
     } catch (error: any) {
       expect(error.code).toBe("FORBIDDEN");
@@ -117,7 +110,6 @@ describe("Leveling System", () => {
         characterId: 1,
       });
     } catch (error: any) {
-      // Expected to fail - character doesn't exist
       expect(error.code).toBe("FORBIDDEN");
     }
   });

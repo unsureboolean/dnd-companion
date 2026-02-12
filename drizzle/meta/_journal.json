@@ -29,6 +29,13 @@
       "when": 1769479139721,
       "tag": "0003_black_solo",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1770919626332,
+      "tag": "0004_exotic_surge",
+      "breakpoints": true
     }
   ]
 }

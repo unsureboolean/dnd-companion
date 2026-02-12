@@ -2,11 +2,31 @@ import axios from "axios";
 
 const OPENAI_API_URL = "https://api.openai.com/v1";
 
-type Role = "system" | "user" | "assistant";
+type Role = "system" | "user" | "assistant" | "tool";
 
 interface Message {
   role: Role;
   content: string;
+  tool_call_id?: string;
+  tool_calls?: ToolCall[];
+}
+
+interface ToolCall {
+  id: string;
+  type: "function";
+  function: {
+    name: string;
+    arguments: string;
+  };
+}
+
+interface ToolDefinition {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
 }
 
 interface ChatCompletionRequest {
@@ -17,6 +37,10 @@ interface ChatCompletionRequest {
   response_format?: {
     type: "json_object" | "text";
   };
+  /** OpenAI function calling tools */
+  tools?: ToolDefinition[];
+  /** Tool choice: 'none', 'auto', 'required', or specific function */
+  tool_choice?: "none" | "auto" | "required" | { type: "function"; function: { name: string } };
 }
 
 interface ChatCompletionResponse {
@@ -81,6 +105,8 @@ export async function invokeOpenAI(request: ChatCompletionRequest): Promise<Chat
       temperature: request.temperature ?? 0.7,
       max_tokens: request.max_tokens ?? 2000,
       ...(request.response_format && { response_format: request.response_format }),
+      ...(request.tools && { tools: request.tools }),
+      ...(request.tool_choice && { tool_choice: request.tool_choice }),
     },
     {
       headers: {

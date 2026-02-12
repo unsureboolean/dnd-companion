@@ -9,6 +9,7 @@ import { aiRouter } from "./aiRouter";
 import { multiCharacterRouter } from "./multiCharacterRouter";
 import { characterGeneratorRouter } from "./characterGeneratorRouter";
 import { levelingRouter } from "./levelingRouter";
+import { dmEngineRouter } from "./dmEngineRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -16,6 +17,7 @@ export const appRouter = router({
   multiCharacter: multiCharacterRouter,
   characterGenerator: characterGeneratorRouter,
   leveling: levelingRouter,
+  dmEngine: dmEngineRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {

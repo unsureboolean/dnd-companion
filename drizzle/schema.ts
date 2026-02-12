@@ -143,3 +143,159 @@ export const aiConversations = mysqlTable("aiConversations", {
 
 export type AiConversation = typeof aiConversations.$inferSelect;
 export type InsertAiConversation = typeof aiConversations.$inferInsert;
+
+// ============================================================
+// DM ENGINE TABLES
+// These tables form the "source of truth" layer that the LLM
+// reads from but never writes to directly. All mutations go
+// through the mechanics engine.
+// ============================================================
+
+/**
+ * Game State - tracks the current state of a campaign session
+ * This is the "world clock" - what mode are we in, where are we, what time is it
+ */
+export const gameState = mysqlTable("gameState", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  /** Current mode: exploration, combat, social, rest */
+  mode: mysqlEnum("mode", ["exploration", "combat", "social", "rest"]).default("exploration").notNull(),
+  /** Current location reference (matches a location entry) */
+  currentLocationId: int("currentLocationId"),
+  /** In-game time tracking (e.g., "Day 3, Evening") */
+  inGameTime: varchar("inGameTime", { length: 255 }).default("Day 1, Morning"),
+  /** Environmental conditions (weather, lighting, etc.) */
+  environmentalConditions: json("environmentalConditions"),
+  /** Active global effects (e.g., "magical darkness in the dungeon") */
+  activeEffects: json("activeEffects"),
+  /** Session counter */
+  sessionNumber: int("sessionNumber").default(1).notNull(),
+  /** Turn counter within the current session */
+  turnNumber: int("turnNumber").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GameState = typeof gameState.$inferSelect;
+export type InsertGameState = typeof gameState.$inferInsert;
+
+/**
+ * NPCs - non-player characters with goals that advance off-screen
+ * The current_goal field is KEY: if players ignore an NPC, the system
+ * can advance their plans between turns.
+ */
+export const npcs = mysqlTable("npcs", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  /** NPC type for quick filtering */
+  npcType: mysqlEnum("npcType", ["friendly", "neutral", "hostile", "merchant", "quest_giver", "boss"]).default("neutral").notNull(),
+  /** Short description for context injection */
+  description: text("description"),
+  /** Current location (matches a location entry or free text) */
+  locationId: int("locationId"),
+  /** CRITICAL: What is this NPC currently trying to do? */
+  currentGoal: text("currentGoal"),
+  /** How far along are they in their goal? 0-100 */
+  goalProgress: int("goalProgress").default(0),
+  /** Disposition toward the party: -100 (hostile) to 100 (allied) */
+  disposition: int("disposition").default(0),
+  /** Combat stats (AC, HP, attacks) - JSON for flexibility */
+  stats: json("stats"),
+  /** Personality notes for the narrator */
+  personalityNotes: text("personalityNotes"),
+  /** Is this NPC currently alive and active? */
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Npc = typeof npcs.$inferSelect;
+export type InsertNpc = typeof npcs.$inferInsert;
+
+/**
+ * Locations - places in the world with hidden objects and DCs
+ * Hidden objects are checked against passive perception BEFORE
+ * the room description is generated, so the narrator knows what to reveal.
+ */
+export const locations = mysqlTable("locations", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  /** What the party sees on first entering (base description) */
+  baseDescription: text("baseDescription"),
+  /** Connected location IDs for navigation */
+  connectedLocationIds: json("connectedLocationIds"),
+  /** Hidden objects with DCs: [{name, dc, type, description, discovered}] */
+  hiddenObjects: json("hiddenObjects"),
+  /** Environmental hazards or effects */
+  hazards: json("hazards"),
+  /** Is this location currently accessible? */
+  isAccessible: boolean("isAccessible").default(true).notNull(),
+  /** Has the party visited this location? */
+  isVisited: boolean("isVisited").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Location = typeof locations.$inferSelect;
+export type InsertLocation = typeof locations.$inferInsert;
+
+/**
+ * Encounter State - active combat tracking
+ * This is the source of truth for initiative order, HP, conditions.
+ * The initiative tracker UI reads from this, not from LLM output.
+ */
+export const encounterState = mysqlTable("encounterState", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  /** Is this encounter currently active? */
+  isActive: boolean("isActive").default(true).notNull(),
+  /** Current round number */
+  currentRound: int("currentRound").default(1).notNull(),
+  /** Index into initiative order for whose turn it is */
+  currentTurnIndex: int("currentTurnIndex").default(0).notNull(),
+  /** Initiative order: [{id, name, initiative, type: 'pc'|'npc', hp, maxHp, ac, conditions}] */
+  initiativeOrder: json("initiativeOrder"),
+  /** Location where the encounter is happening */
+  locationId: int("locationId"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EncounterState = typeof encounterState.$inferSelect;
+export type InsertEncounterState = typeof encounterState.$inferInsert;
+
+/**
+ * Mechanics Log - every dice roll, check, and state change is logged here.
+ * This provides an audit trail and feeds the narrator with exact results.
+ * The UI can show these as structured data alongside narrative prose.
+ */
+export const mechanicsLog = mysqlTable("mechanicsLog", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  /** Turn number this happened on */
+  turnNumber: int("turnNumber").notNull(),
+  /** What type of mechanical event */
+  eventType: mysqlEnum("eventType", [
+    "skill_check", "attack_roll", "saving_throw", "damage",
+    "healing", "spell_cast", "item_use", "hp_change",
+    "condition_change", "initiative_roll", "death_save",
+    "passive_check", "npc_goal_advance", "state_change"
+  ]).notNull(),
+  /** Who initiated this (character ID or NPC name) */
+  actorId: varchar("actorId", { length: 255 }),
+  /** Target of the action (if any) */
+  targetId: varchar("targetId", { length: 255 }),
+  /** Full mechanical details as JSON */
+  details: json("details"),
+  /** Human-readable summary (e.g., "Rolled 18 + 5 = 23 vs DC 15: SUCCESS") */
+  summary: text("summary"),
+  /** Was this visible to players or hidden (e.g., passive checks)? */
+  isHidden: boolean("isHidden").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MechanicsLog = typeof mechanicsLog.$inferSelect;
+export type InsertMechanicsLog = typeof mechanicsLog.$inferInsert;

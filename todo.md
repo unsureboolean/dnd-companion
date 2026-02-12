@@ -140,3 +140,42 @@
 - [ ] Users need dedicated screen with Character Sheet, all dice, list of other character basic info, notes, etc.
 - [ ] DM needs dedicated DM screen with additional info, DM notes, NPC and Dialogue generator, context tracker
 - [ ] Integrate character creation into the "Characters" tab on the Campaigns page
+
+## Phase 13: DM Engine Refactor - Separate Narrative from Mechanics
+
+### Architecture & Schema
+- [x] Design DM engine architecture document (ARCHITECTURE.md)
+- [x] Add world state tables (rooms, objects with hidden DCs, NPC goals)
+- [x] Add game state table for tracking current encounter/exploration mode
+- [x] Add NPC table with current_goal field for off-screen advancement
+
+### Mechanics Engine (server/engine/)
+- [x] Create dice engine (RNG-based, no LLM math) - roll_skill, roll_attack, roll_save, roll_damage
+- [x] Create skill check resolver (compare roll vs DC, factor proficiency/advantage)
+- [x] Create combat engine (initiative, attack resolution, damage application, death saves)
+- [x] Create passive perception/investigation system (check stats vs hidden DCs before narration)
+- [x] Create inventory/spell slot manager (source of truth for state changes)
+- [x] Create state manager that reads/writes all game state to DB
+
+### DM Logic Loop (server/engine/dmLoop.ts)
+- [x] Implement intent parser - LLM classifies player input into action types
+- [x] Implement function calling tools for LLM (roll_skill, roll_attack, check_inventory, etc.)
+- [x] Build the core loop: input → intent → mechanics → narrate → update state
+- [x] Feed current game state (HP, inventory, spell slots, world state) into context every turn
+- [x] Implement passive checks that run BEFORE room descriptions are generated
+- [x] Implement NPC off-screen goal advancement between turns
+
+### Narrative Layer (integrated into dmLoop.ts)
+- [x] Create narrator that receives mechanics results and generates prose
+- [x] Ensure narrator NEVER generates stats/numbers - only reads from DB
+- [x] Feed dice results, check outcomes, and state changes into narrator context
+- [x] Generate room descriptions with passive check results baked in
+
+### UI Updates
+- [x] Update campaign chat to use new DM engine loop
+- [x] Show mechanics results (dice rolls, checks) in structured format alongside narration
+- [x] Add game state sidebar showing current HP, conditions, spell slots from DB
+### Testing
+- [x] Write vitest tests for mechanics engine (31 tests passing)
+- [x] Fix leveling tests timeout issues
+- [x] All 60 tests passing across 7 test files
