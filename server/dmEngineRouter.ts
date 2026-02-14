@@ -13,6 +13,8 @@ import { protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import * as db from "./db";
 import * as stateManager from "./engine/stateManager";
+import * as embeddingService from "./engine/embeddingService";
+import * as memoryPipeline from "./engine/memoryPipeline";
 import { runDmLoop } from "./engine/dmLoop";
 
 export const dmEngineRouter = router({
@@ -260,5 +262,196 @@ export const dmEngineRouter = router({
 
       const gameState = await stateManager.getOrCreateGameState(input.campaignId);
       return gameState;
+    }),
+
+  // ============================================================
+  // VECTOR MEMORY ENDPOINTS
+  // ============================================================
+
+  /**
+   * Search campaign memories by semantic similarity.
+   * Used by the memory browser UI and for manual context lookup.
+   */
+  searchMemories: protectedProcedure
+    .input(
+      z.object({
+        campaignId: z.number(),
+        query: z.string().min(1),
+        topK: z.number().min(1).max(20).default(8),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const campaign = await db.getCampaignById(input.campaignId);
+      if (!campaign || campaign.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+      }
+
+      const results = await embeddingService.searchMemories(
+        input.campaignId,
+        input.query,
+        input.topK
+      );
+
+      return results.map((r) => ({
+        id: r.memory.id,
+        memoryType: r.memory.memoryType,
+        content: r.memory.content,
+        summary: r.memory.summary,
+        similarity: Math.round(r.similarity * 100),
+        sessionNumber: r.memory.sessionNumber,
+        turnNumber: r.memory.turnNumber,
+        tags: r.memory.tags,
+        importanceBoost: r.memory.importanceBoost,
+        createdAt: r.memory.createdAt,
+      }));
+    }),
+
+  /**
+   * Get all memories for a campaign (for the memory browser).
+   */
+  getMemories: protectedProcedure
+    .input(z.object({ campaignId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const campaign = await db.getCampaignById(input.campaignId);
+      if (!campaign || campaign.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+      }
+
+      const memories = await embeddingService.getCampaignMemories(input.campaignId);
+      return memories.map((m) => ({
+        id: m.id,
+        memoryType: m.memoryType,
+        content: m.content,
+        summary: m.summary,
+        sessionNumber: m.sessionNumber,
+        turnNumber: m.turnNumber,
+        tags: m.tags,
+        importanceBoost: m.importanceBoost,
+        createdAt: m.createdAt,
+      }));
+    }),
+
+  /**
+   * Get memory count for a campaign.
+   */
+  getMemoryCount: protectedProcedure
+    .input(z.object({ campaignId: z.number() }))
+    .query(async ({ ctx, input }) => {
+      const campaign = await db.getCampaignById(input.campaignId);
+      if (!campaign || campaign.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+      }
+
+      return embeddingService.getMemoryCount(input.campaignId);
+    }),
+
+  /**
+   * Delete a specific memory.
+   */
+  deleteMemory: protectedProcedure
+    .input(z.object({ memoryId: z.number(), campaignId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const campaign = await db.getCampaignById(input.campaignId);
+      if (!campaign || campaign.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+      }
+
+      await embeddingService.deleteMemory(input.memoryId);
+      return { success: true };
+    }),
+
+  /**
+   * Update importance boost for a memory.
+   */
+  updateMemoryImportance: protectedProcedure
+    .input(
+      z.object({
+        memoryId: z.number(),
+        campaignId: z.number(),
+        importanceBoost: z.number().min(0).max(10),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const campaign = await db.getCampaignById(input.campaignId);
+      if (!campaign || campaign.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+      }
+
+      await embeddingService.updateMemoryImportance(
+        input.memoryId,
+        input.importanceBoost
+      );
+      return { success: true };
+    }),
+
+  /**
+   * Manually add a memory (for user-created lore, notes, etc.).
+   */
+  addMemory: protectedProcedure
+    .input(
+      z.object({
+        campaignId: z.number(),
+        memoryType: z.enum([
+          "session_narration", "player_action", "npc_interaction",
+          "combat_event", "location_discovery", "plot_point",
+          "item_event", "lore", "context_entry", "character_moment",
+        ]),
+        content: z.string().min(1),
+        summary: z.string().optional(),
+        importanceBoost: z.number().min(0).max(10).default(2),
+        tags: z.array(z.string()).optional(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const campaign = await db.getCampaignById(input.campaignId);
+      if (!campaign || campaign.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+      }
+
+      const memoryId = await embeddingService.embedAndStore({
+        campaignId: input.campaignId,
+        memoryType: input.memoryType,
+        content: input.content,
+        summary: input.summary,
+        importanceBoost: input.importanceBoost,
+        tags: input.tags,
+      });
+
+      return { id: memoryId };
+    }),
+
+  /**
+   * Bulk embed existing context entries into vector memory.
+   * Used when first enabling the DM engine on a campaign that
+   * already has context entries.
+   */
+  initializeMemories: protectedProcedure
+    .input(z.object({ campaignId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const campaign = await db.getCampaignById(input.campaignId);
+      if (!campaign || campaign.userId !== ctx.user.id) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+      }
+
+      // Get existing context entries
+      const contextEntries = await db.getCampaignContext(input.campaignId);
+
+      if (contextEntries.length === 0) {
+        return { embedded: 0 };
+      }
+
+      // Embed all context entries
+      const items = contextEntries.map((entry: { id: number; entryType: string; title: string; content: string }) => ({
+        campaignId: input.campaignId,
+        memoryType: "context_entry" as const,
+        content: `[${entry.entryType}] ${entry.title}: ${entry.content}`,
+        summary: `${entry.title}: ${entry.content.substring(0, 150)}`,
+        sourceId: entry.id,
+        sourceTable: "contextEntries",
+        tags: [entry.entryType, entry.title],
+      }));
+
+      const embedded = await embeddingService.batchEmbedAndStore(items);
+      return { embedded };
     }),
 });

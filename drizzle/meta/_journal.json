@@ -36,6 +36,13 @@
       "when": 1770919626332,
       "tag": "0004_exotic_surge",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1771039883391,
+      "tag": "0005_bitter_thing",
+      "breakpoints": true
     }
   ]
 }

@@ -179,3 +179,31 @@
 - [x] Write vitest tests for mechanics engine (31 tests passing)
 - [x] Fix leveling tests timeout issues
 - [x] All 60 tests passing across 7 test files
+
+## Phase 14: Vector Database for Long-Term DM Memory
+
+### Schema & Embedding Service
+- [x] Add embeddings table to store vector data with metadata
+- [x] Create OpenAI embedding service (text-embedding-3-small)
+- [x] Implement cosine similarity search in application layer
+
+### Embedding Pipeline
+- [x] Auto-embed session log entries when created
+- [x] Auto-embed game context entries (NPCs, locations, events, items)
+- [x] Auto-embed DM narration and important dialogue
+- [x] Batch embed existing content on campaign initialization
+
+### RAG Integration into DM Loop
+- [x] Add semantic search step before DM narration
+- [x] Inject top-K relevant memories into LLM context
+- [x] Filter memories by campaign and relevance score threshold
+- [x] Add memory management endpoints (search, browse, delete, boost importance)
+
+### Memory Management
+- [x] Add memory search/browse/delete/boost endpoints
+- [x] Add manual memory creation for user-created lore/notes
+- [x] Add bulk embed for existing context entries
+
+### Testing
+- [x] Write vitest tests for cosine similarity (11 tests)
+- [x] All 71 tests passing across 8 test files

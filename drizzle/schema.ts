@@ -299,3 +299,59 @@ export const mechanicsLog = mysqlTable("mechanicsLog", {
 
 export type MechanicsLog = typeof mechanicsLog.$inferSelect;
 export type InsertMechanicsLog = typeof mechanicsLog.$inferInsert;
+
+// ============================================================
+// VECTOR MEMORY TABLES
+// Stores embeddings for RAG-based long-term DM memory.
+// AI-NOTE: Text content is embedded via OpenAI text-embedding-3-small
+// and stored as JSON arrays. Cosine similarity is computed in the
+// application layer for semantic search.
+// ============================================================
+
+/**
+ * Memory Embeddings - stores vector representations of game content
+ * for semantic search / RAG. Each row is one "memory" that the AI DM
+ * can retrieve when relevant to the current conversation.
+ *
+ * AI-NOTE: The embedding column stores a JSON array of floats (1536 dims
+ * for text-embedding-3-small). Cosine similarity is computed in JS,
+ * not in SQL, because MySQL doesn't have native vector ops.
+ */
+export const memoryEmbeddings = mysqlTable("memoryEmbeddings", {
+  id: int("id").autoincrement().primaryKey(),
+  campaignId: int("campaignId").notNull(),
+  /** What type of content this memory represents */
+  memoryType: mysqlEnum("memoryType", [
+    "session_narration",   // DM narration from a session
+    "player_action",       // Something a player did
+    "npc_interaction",     // Dialogue or interaction with an NPC
+    "combat_event",        // A notable combat moment
+    "location_discovery",  // Discovering a new place
+    "plot_point",          // Major story beat
+    "item_event",          // Finding/using an important item
+    "lore",                // World lore or backstory
+    "context_entry",       // User-created context entry
+    "character_moment",    // Character development moment
+  ]).notNull(),
+  /** The original text content that was embedded */
+  content: text("content").notNull(),
+  /** Short summary for display in the UI */
+  summary: varchar("summary", { length: 500 }),
+  /** The embedding vector as a JSON array of floats */
+  embedding: json("embedding").notNull(),
+  /** Reference to the source record (session log ID, context entry ID, etc.) */
+  sourceId: int("sourceId"),
+  /** Source table name for traceability */
+  sourceTable: varchar("sourceTable", { length: 100 }),
+  /** Which session/turn this memory is from */
+  sessionNumber: int("sessionNumber"),
+  turnNumber: int("turnNumber"),
+  /** Relevance score boost (manual override for important memories) */
+  importanceBoost: int("importanceBoost").default(0),
+  /** Tags for filtering (e.g., NPC names, location names) */
+  tags: json("tags"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type MemoryEmbedding = typeof memoryEmbeddings.$inferSelect;
+export type InsertMemoryEmbedding = typeof memoryEmbeddings.$inferInsert;

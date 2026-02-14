@@ -16,6 +16,8 @@
 import { invokeOpenAI } from "../openai";
 import * as mechanics from "./mechanics";
 import * as state from "./stateManager";
+import * as memory from "./embeddingService";
+import * as memoryPipeline from "./memoryPipeline";
 import type { CharacterState, MechanicsResult, HiddenObject } from "./mechanics";
 import type { GameSnapshot } from "./stateManager";
 import type { Npc } from "../../drizzle/schema";
@@ -577,7 +579,7 @@ async function runPreNarrationChecks(
 // Builds the system prompt with full game state for the narrator.
 // ============================================================
 
-function buildSystemPrompt(snapshot: GameSnapshot, campaignName: string, campaignDescription: string | null): string {
+function buildSystemPrompt(snapshot: GameSnapshot, campaignName: string, campaignDescription: string | null, memoryContext: string = ""): string {
   let prompt = `You are the Dungeon Master for the D&D 5e campaign "${campaignName}".
 ${campaignDescription ? `Campaign: ${campaignDescription}` : ""}
 
@@ -633,6 +635,11 @@ CURRENT GAME STATE:
         prompt += `${marker} ${e.name}: Initiative ${e.initiative}, HP ${e.hp}/${e.maxHp}, AC ${e.ac}${e.conditions.length ? ` [${e.conditions.join(", ")}]` : ""}\n`;
       });
     }
+  }
+
+  // Long-term memories from vector store (RAG)
+  if (memoryContext) {
+    prompt += memoryContext;
   }
 
   // Recent mechanics (for continuity)
@@ -702,8 +709,28 @@ export async function runDmLoop(input: DmLoopInput): Promise<DmLoopOutput> {
   // Rebuild snapshot with discoveries
   snapshot = await state.buildGameSnapshot(campaignId, preChecks.discoveries);
 
-  // Step 3: Build the system prompt with full game state
-  const systemPrompt = buildSystemPrompt(snapshot, campaignName, campaignDescription);
+  // Step 3: RAG - Search vector memory for relevant long-term context
+  // AI-NOTE: This is the key RAG step. We embed the player's input,
+  // search for semantically similar memories, and inject them into
+  // the system prompt so the DM can recall past events.
+  let memoryContext = "";
+  try {
+    const relevantMemories = await memory.searchMemories(
+      campaignId,
+      playerInput,
+      8,    // top-K results
+      0.3   // similarity threshold
+    );
+    if (relevantMemories.length > 0) {
+      memoryContext = memory.formatMemoriesForContext(relevantMemories);
+    }
+  } catch (e) {
+    // Don't fail the turn if memory search fails
+    console.error("[DmLoop] Memory search failed:", e);
+  }
+
+  // Step 4: Build the system prompt with full game state + memories
+  const systemPrompt = buildSystemPrompt(snapshot, campaignName, campaignDescription, memoryContext);
 
   // Build message history
   const messages: Array<{ role: "system" | "user" | "assistant"; content: string }> = [
@@ -721,7 +748,7 @@ export async function runDmLoop(input: DmLoopInput): Promise<DmLoopOutput> {
   // Add current player input
   messages.push({ role: "user", content: playerInput });
 
-  // Step 4: Call LLM with function calling tools
+  // Step 5: Call LLM with function calling tools
   // The LLM will decide what mechanics to invoke based on the player's input
   const allMechanicsResults: MechanicsResult[] = [
     ...preChecks.passiveResults,
@@ -786,8 +813,21 @@ export async function runDmLoop(input: DmLoopInput): Promise<DmLoopOutput> {
       ? choice.message.content
       : "The dungeon master ponders the situation...";
 
-    // Step 5: Build final snapshot after all state changes
+    // Step 6: Build final snapshot after all state changes
     const finalSnapshot = await state.buildGameSnapshot(campaignId);
+
+    // Step 7: Auto-embed this turn's content into vector memory
+    // AI-NOTE: This runs async after the response is built.
+    // We don't await it to avoid slowing down the response.
+    const gameStateObj = await state.getOrCreateGameState(campaignId);
+    memoryPipeline.embedTurnResults({
+      campaignId,
+      turnNumber,
+      sessionNumber: gameStateObj.sessionNumber,
+      playerInput,
+      narration,
+      mechanicsResults: allMechanicsResults,
+    }).catch((e) => console.error("[DmLoop] Memory embedding failed:", e));
 
     return {
       narration,
