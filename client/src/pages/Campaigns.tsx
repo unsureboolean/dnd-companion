@@ -18,9 +18,13 @@ export default function Campaigns() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedCharacterId, setSelectedCharacterId] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
   const { data: campaigns, isLoading } = trpc.campaigns.list.useQuery(undefined, {
+    enabled: !!user,
+  });
+  const { data: characters } = trpc.characters.list.useQuery(undefined, {
     enabled: !!user,
   });
 
@@ -43,7 +47,11 @@ export default function Campaigns() {
       toast.error("Campaign name is required");
       return;
     }
-    createMutation.mutate({ name, description });
+    if (!selectedCharacterId) {
+      toast.error("Please select a character to play");
+      return;
+    }
+    createMutation.mutate({ name, description, playerCharacterId: selectedCharacterId });
   };
 
   if (authLoading || isLoading) {
@@ -122,6 +130,25 @@ export default function Campaigns() {
                     rows={4}
                     className="bg-white/50 border-amber-800/30"
                   />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="player-character" className="text-amber-800 dark:text-amber-200">Your Character *</Label>
+                  <select
+                    id="player-character"
+                    value={selectedCharacterId || ""}
+                    onChange={(e) => setSelectedCharacterId(e.target.value ? parseInt(e.target.value) : null)}
+                    className="w-full px-3 py-2 bg-white/50 border border-amber-800/30 rounded-md text-amber-900 dark:text-amber-100 dark:bg-amber-950/50"
+                  >
+                    <option value="">Select a character...</option>
+                    {characters?.map((char) => (
+                      <option key={char.id} value={char.id}>
+                        {char.name} - Level {char.level} {char.characterClass}
+                      </option>
+                    ))}
+                  </select>
+                  {(!characters || characters.length === 0) && (
+                    <p className="text-sm text-amber-600 dark:text-amber-400">You need to create a character first</p>
+                  )}
                 </div>
               </div>
               <DialogFooter>

@@ -207,3 +207,15 @@
 ### Testing
 - [x] Write vitest tests for cosine similarity (11 tests)
 - [x] All 71 tests passing across 8 test files
+
+
+## Phase 15: Character Requirement for Campaigns
+- [x] Add playerCharacterId field to campaigns table
+- [x] Require character selection when creating a campaign
+- [x] Add character selection UI to campaign creation flow
+- [x] Update campaign detail to show selected player character
+- [x] Allow switching player character mid-campaign
+- [x] Integrate character identity into DM loop system prompt
+- [x] Ensure AI DM references player character by name and class
+- [x] Update DM narration to acknowledge player character actions
+- [x] Write vitest tests for character requirement (4 tests passing)

@@ -38,10 +38,18 @@ export const appRouter = router({
       .input(z.object({
         name: z.string().min(1).max(255),
         description: z.string().optional(),
+        playerCharacterId: z.number().min(1),
       }))
       .mutation(async ({ ctx, input }) => {
+        // Verify the character belongs to the user
+        const character = await db.getCharacterById(input.playerCharacterId);
+        if (!character || character.userId !== ctx.user.id) {
+          throw new TRPCError({ code: "FORBIDDEN", message: "Character not found or not yours" });
+        }
+        
         return db.createCampaign({
           userId: ctx.user.id,
+          playerCharacterId: input.playerCharacterId,
           name: input.name,
           description: input.description,
         });
@@ -65,11 +73,20 @@ export const appRouter = router({
         id: z.number(),
         name: z.string().min(1).max(255).optional(),
         description: z.string().optional(),
+        playerCharacterId: z.number().min(1).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const campaign = await db.getCampaignById(input.id);
         if (!campaign || campaign.userId !== ctx.user.id) {
           throw new TRPCError({ code: "FORBIDDEN", message: "Access denied" });
+        }
+        
+        // If changing character, verify it belongs to the user
+        if (input.playerCharacterId) {
+          const character = await db.getCharacterById(input.playerCharacterId);
+          if (!character || character.userId !== ctx.user.id) {
+            throw new TRPCError({ code: "FORBIDDEN", message: "Character not found or not yours" });
+          }
         }
         
         const { id, ...updates } = input;

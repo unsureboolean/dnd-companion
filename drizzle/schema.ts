@@ -23,7 +23,8 @@ export type InsertUser = typeof users.$inferInsert;
  */
 export const campaigns = mysqlTable("campaigns", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(), // owner of the campaign
+  userId: int("userId").notNull(),
+  playerCharacterId: int("playerCharacterId"),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
