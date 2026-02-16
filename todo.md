@@ -219,3 +219,8 @@
 - [x] Ensure AI DM references player character by name and class
 - [x] Update DM narration to acknowledge player character actions
 - [x] Write vitest tests for character requirement (4 tests passing)
+
+## Phase 16: Character Creation Prompt in Campaign Flow
+- [x] Show "Create Character First" prompt when user has no characters in campaign creation dialog
+- [x] Add link/button to navigate to character creation page
+- [x] Disable Create Campaign button when no characters exist

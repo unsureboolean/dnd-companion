@@ -133,21 +133,32 @@ export default function Campaigns() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="player-character" className="text-amber-800 dark:text-amber-200">Your Character *</Label>
-                  <select
-                    id="player-character"
-                    value={selectedCharacterId || ""}
-                    onChange={(e) => setSelectedCharacterId(e.target.value ? parseInt(e.target.value) : null)}
-                    className="w-full px-3 py-2 bg-white/50 border border-amber-800/30 rounded-md text-amber-900 dark:text-amber-100 dark:bg-amber-950/50"
-                  >
-                    <option value="">Select a character...</option>
-                    {characters?.map((char) => (
-                      <option key={char.id} value={char.id}>
-                        {char.name} - Level {char.level} {char.characterClass}
-                      </option>
-                    ))}
-                  </select>
-                  {(!characters || characters.length === 0) && (
-                    <p className="text-sm text-amber-600 dark:text-amber-400">You need to create a character first</p>
+                  {characters && characters.length > 0 ? (
+                    <select
+                      id="player-character"
+                      value={selectedCharacterId || ""}
+                      onChange={(e) => setSelectedCharacterId(e.target.value ? parseInt(e.target.value) : null)}
+                      className="w-full px-3 py-2 bg-white/50 border border-amber-800/30 rounded-md text-amber-900 dark:text-amber-100 dark:bg-amber-950/50"
+                    >
+                      <option value="">Select a character...</option>
+                      {characters.map((char) => (
+                        <option key={char.id} value={char.id}>
+                          {char.name} - Level {char.level} {char.characterClass}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="rounded-lg border-2 border-dashed border-amber-600/40 bg-amber-100/50 dark:bg-amber-900/30 p-4 text-center">
+                      <Users className="h-8 w-8 text-amber-600 mx-auto mb-2" />
+                      <p className="text-sm font-medium text-amber-800 dark:text-amber-200 mb-1">No characters yet</p>
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mb-3">You need to create a character before starting a campaign</p>
+                      <Link href="/characters/create">
+                        <Button size="sm" className="bg-amber-700 hover:bg-amber-800 text-white">
+                          <Plus className="mr-1 h-3 w-3" />
+                          Create Character
+                        </Button>
+                      </Link>
+                    </div>
                   )}
                 </div>
               </div>
@@ -157,7 +168,7 @@ export default function Campaigns() {
                 </Button>
                 <Button 
                   onClick={handleCreate} 
-                  disabled={createMutation.isPending}
+                  disabled={createMutation.isPending || !characters || characters.length === 0}
                   className="bg-amber-700 hover:bg-amber-800"
                 >
                   {createMutation.isPending ? "Creating..." : "Create Campaign"}

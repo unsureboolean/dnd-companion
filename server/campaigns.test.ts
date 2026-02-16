@@ -31,14 +31,38 @@ function createAuthContext(): { ctx: TrpcContext } {
   return { ctx };
 }
 
+// Helper to create a character first (required for campaigns)
+async function createTestCharacter(caller: ReturnType<typeof appRouter.createCaller>) {
+  return caller.characters.create({
+    name: "Test Hero",
+    race: "Human",
+    characterClass: "Fighter",
+    background: "Soldier",
+    level: 1,
+    strength: 16,
+    dexterity: 14,
+    constitution: 14,
+    intelligence: 10,
+    wisdom: 12,
+    charisma: 8,
+    skills: { "Athletics": true, "Intimidation": true },
+    maxHitPoints: 12,
+    currentHitPoints: 12,
+    armorClass: 16,
+    equipment: ["Longsword", "Shield", "Chain Mail"],
+  });
+}
+
 describe("Campaign Management", () => {
-  it("should create a campaign", async () => {
+  it("should create a campaign with a player character", async () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const character = await createTestCharacter(caller);
     const campaign = await caller.campaigns.create({
       name: "The Lost Mines of Phandelver",
       description: "A classic D&D adventure",
+      playerCharacterId: character.id,
     });
 
     expect(campaign).toBeDefined();
@@ -51,9 +75,11 @@ describe("Campaign Management", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const character = await createTestCharacter(caller);
     const created = await caller.campaigns.create({
       name: "Storm King's Thunder",
       description: "Giants threaten the Sword Coast",
+      playerCharacterId: character.id,
     });
 
     const retrieved = await caller.campaigns.get({ id: created.id });
@@ -67,14 +93,18 @@ describe("Campaign Management", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const character = await createTestCharacter(caller);
+
     await caller.campaigns.create({
       name: "Campaign 1",
       description: "First campaign",
+      playerCharacterId: character.id,
     });
 
     await caller.campaigns.create({
       name: "Campaign 2",
       description: "Second campaign",
+      playerCharacterId: character.id,
     });
 
     const campaigns = await caller.campaigns.list();
@@ -87,9 +117,11 @@ describe("Context Management", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const character = await createTestCharacter(caller);
     const campaign = await caller.campaigns.create({
       name: "Test Campaign",
       description: "For context testing",
+      playerCharacterId: character.id,
     });
 
     const contextEntry = await caller.context.create({
@@ -110,8 +142,10 @@ describe("Context Management", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const character = await createTestCharacter(caller);
     const campaign = await caller.campaigns.create({
       name: "Context Test Campaign",
+      playerCharacterId: character.id,
     });
 
     await caller.context.create({
@@ -136,8 +170,10 @@ describe("Context Management", () => {
     const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
+    const character = await createTestCharacter(caller);
     const campaign = await caller.campaigns.create({
       name: "Delete Test Campaign",
+      playerCharacterId: character.id,
     });
 
     const entry = await caller.context.create({
