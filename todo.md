@@ -224,3 +224,14 @@
 - [x] Show "Create Character First" prompt when user has no characters in campaign creation dialog
 - [x] Add link/button to navigate to character creation page
 - [x] Disable Create Campaign button when no characters exist
+
+## Phase 17: Memory Browser Tab
+- [x] Review existing memory management endpoints (search, browse, delete, boost)
+- [x] Build Memory Browser component with search, filter, and list view
+- [x] Show memory type badges (narration, player_action, combat, npc_interaction, etc.)
+- [x] Add importance score display and boost/reduce controls
+- [x] Add manual memory creation form for user-added lore/notes
+- [x] Add delete functionality for individual memories
+- [ ] Show which memories were retrieved for each DM response (future enhancement)
+- [x] Integrate Memory Browser as a tab in campaign detail page
+- [x] Test Memory Browser functionality (22 tests passing)

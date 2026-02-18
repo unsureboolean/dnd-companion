@@ -11,11 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import { trpc } from "@/lib/trpc";
 import NavHeader from "@/components/NavHeader";
 import DiceRoller from "@/components/DiceRoller";
+import MemoryBrowser from "@/components/MemoryBrowser";
 import { useParams, useLocation } from "wouter";
 import {
   Loader2, Send, Plus, Trash2, Sparkles, ArrowLeft, Swords,
   Shield, Heart, MapPin, Users, Scroll, Dices, Clock, Eye,
-  ChevronDown, ChevronUp, Skull, Star
+  ChevronDown, ChevronUp, Skull, Star, Brain
 } from "lucide-react";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
@@ -471,7 +472,7 @@ export default function CampaignDetail() {
           {/* Main Content */}
           <div>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-              <TabsList className="grid w-full grid-cols-4 bg-amber-100/50 dark:bg-amber-900/50">
+              <TabsList className="grid w-full grid-cols-5 bg-amber-100/50 dark:bg-amber-900/50">
                 <TabsTrigger value="play" className="data-[state=active]:bg-amber-700 data-[state=active]:text-white font-serif">
                   <Scroll className="h-4 w-4 mr-1" /> DM Mode
                 </TabsTrigger>
@@ -480,6 +481,9 @@ export default function CampaignDetail() {
                 </TabsTrigger>
                 <TabsTrigger value="context" className="data-[state=active]:bg-amber-700 data-[state=active]:text-white font-serif">
                   <MapPin className="h-4 w-4 mr-1" /> Context
+                </TabsTrigger>
+                <TabsTrigger value="memory" className="data-[state=active]:bg-amber-700 data-[state=active]:text-white font-serif">
+                  <Brain className="h-4 w-4 mr-1" /> Memory
                 </TabsTrigger>
                 <TabsTrigger value="mechanics" className="data-[state=active]:bg-amber-700 data-[state=active]:text-white font-serif">
                   <Dices className="h-4 w-4 mr-1" /> Mechanics
@@ -776,6 +780,11 @@ export default function CampaignDetail() {
                     )}
                   </CardContent>
                 </Card>
+              </TabsContent>
+
+              {/* ============ MEMORY BROWSER TAB ============ */}
+              <TabsContent value="memory" className="space-y-4">
+                <MemoryBrowser campaignId={campaignId} />
               </TabsContent>
 
               {/* ============ MECHANICS LOG TAB ============ */}
