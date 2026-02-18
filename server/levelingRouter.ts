@@ -43,8 +43,10 @@ export const levelingRouter = router({
       // ASIs are granted at levels 4, 8, 12, 16, 19
       const grantedASI = [4, 8, 12, 16, 19].includes(input.targetLevel);
 
-      // Check if this level grants a subclass choice (usually level 3)
-      const grantedSubclass = input.targetLevel === 3 && !character.subclass;
+      // Check if this level grants a subclass choice
+      // Different classes get subclass at different levels (1, 2, or 3)
+      const subclassLevel = classData.subclasses?.[0]?.level ?? 3;
+      const grantedSubclass = input.targetLevel === subclassLevel && !character.subclass;
 
       return {
         currentLevel: character.level,

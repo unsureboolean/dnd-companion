@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,32 +18,45 @@ interface LevelUpDialogProps {
 
 export function LevelUpDialog({ characterId, currentLevel, onLevelUp }: LevelUpDialogProps) {
   const [open, setOpen] = useState(false);
-  const [targetLevel, setTargetLevel] = useState(currentLevel + 1);
   const [selectedSpells, setSelectedSpells] = useState<Set<string>>(new Set());
   const [selectedCantrips, setSelectedCantrips] = useState<Set<string>>(new Set());
   const [selectedSubclass, setSelectedSubclass] = useState<string>("");
   const [selectedASI, setSelectedASI] = useState<{ ability: string; increase: number } | null>(null);
 
+  // Always compute targetLevel from the prop so it stays in sync after level-ups
+  const targetLevel = currentLevel + 1;
+
   // Fetch leveling options
   const { data: levelingOptions, isLoading } = trpc.leveling.getLevelingOptions.useQuery(
     { characterId, targetLevel },
-    { enabled: open }
+    { enabled: open && targetLevel <= 20 }
   );
 
   const levelUpMutation = trpc.leveling.levelUp.useMutation({
     onSuccess: () => {
       toast.success(`Character leveled up to level ${targetLevel}!`);
       setOpen(false);
-      setSelectedSpells(new Set());
-      setSelectedCantrips(new Set());
-      setSelectedSubclass("");
-      setSelectedASI(null);
+      resetSelections();
       onLevelUp();
     },
     onError: (error) => {
       toast.error(`Failed to level up: ${error.message}`);
     },
   });
+
+  function resetSelections() {
+    setSelectedSpells(new Set());
+    setSelectedCantrips(new Set());
+    setSelectedSubclass("");
+    setSelectedASI(null);
+  }
+
+  // Reset selections when the dialog opens (in case currentLevel changed)
+  useEffect(() => {
+    if (open) {
+      resetSelections();
+    }
+  }, [open]);
 
   const handleLevelUp = () => {
     levelUpMutation.mutate({
@@ -86,14 +99,14 @@ export function LevelUpDialog({ characterId, currentLevel, onLevelUp }: LevelUpD
       <DialogTrigger asChild>
         <Button variant="default" className="gap-2">
           <Sparkles className="h-4 w-4" />
-          Level Up
+          Level Up to {targetLevel}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Level Up Character</DialogTitle>
           <DialogDescription>
-            Choose your character's new abilities, spells, and improvements for level {targetLevel}
+            Level {currentLevel} → Level {targetLevel}: Choose your character's new abilities, spells, and improvements
           </DialogDescription>
         </DialogHeader>
 
@@ -102,13 +115,48 @@ export function LevelUpDialog({ characterId, currentLevel, onLevelUp }: LevelUpD
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
         ) : levelingOptions ? (
-          <Tabs defaultValue="spells" className="w-full">
+          <Tabs defaultValue="features" className="w-full">
             <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="features">Features</TabsTrigger>
               <TabsTrigger value="spells">Spells</TabsTrigger>
               <TabsTrigger value="cantrips">Cantrips</TabsTrigger>
-              <TabsTrigger value="features">Features</TabsTrigger>
               <TabsTrigger value="improvements">Improvements</TabsTrigger>
             </TabsList>
+
+            {/* Features Tab (shown first since it's most relevant) */}
+            <TabsContent value="features" className="space-y-4">
+              <div className="text-sm text-muted-foreground">
+                New class features gained at level {targetLevel}
+              </div>
+              <div className="space-y-3 max-h-64 overflow-y-auto">
+                {levelingOptions.newClassFeatures.length > 0 ? (
+                  levelingOptions.newClassFeatures.map((feature) => (
+                    <Card key={feature.index}>
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm">{feature.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-xs text-muted-foreground">
+                        {feature.description}
+                      </CardContent>
+                    </Card>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">No new features at this level</p>
+                )}
+              </div>
+
+              {/* HP Gain Info - always show in features tab */}
+              <Card className="bg-muted">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm">Hit Points</CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm">
+                  <p>
+                    You will gain <strong>{levelingOptions.hitPointsGain} + CON modifier HP</strong> from leveling up.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
             {/* Spells Tab */}
             <TabsContent value="spells" className="space-y-4">
@@ -127,7 +175,7 @@ export function LevelUpDialog({ characterId, currentLevel, onLevelUp }: LevelUpD
                       <Label htmlFor={`spell-${spell.index}`} className="flex-1 cursor-pointer">
                         <div className="font-medium">{spell.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          {spell.school} • {spell.castingTime} • Range: {spell.range}
+                          Level {spell.level} • {spell.school} • {spell.castingTime} • Range: {spell.range}
                         </div>
                         <div className="text-xs mt-1">{spell.description}</div>
                       </Label>
@@ -168,29 +216,6 @@ export function LevelUpDialog({ characterId, currentLevel, onLevelUp }: LevelUpD
               </div>
             </TabsContent>
 
-            {/* Features Tab */}
-            <TabsContent value="features" className="space-y-4">
-              <div className="text-sm text-muted-foreground">
-                New class features gained at this level
-              </div>
-              <div className="space-y-3 max-h-64 overflow-y-auto">
-                {levelingOptions.newClassFeatures.length > 0 ? (
-                  levelingOptions.newClassFeatures.map((feature) => (
-                    <Card key={feature.index}>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm">{feature.name}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="text-xs text-muted-foreground">
-                        {feature.description}
-                      </CardContent>
-                    </Card>
-                  ))
-                ) : (
-                  <p className="text-sm text-muted-foreground">No new features at this level</p>
-                )}
-              </div>
-            </TabsContent>
-
             {/* Improvements Tab */}
             <TabsContent value="improvements" className="space-y-4">
               <div className="space-y-4">
@@ -217,6 +242,9 @@ export function LevelUpDialog({ characterId, currentLevel, onLevelUp }: LevelUpD
                 {levelingOptions.grantedASI && (
                   <div>
                     <Label className="text-base font-semibold mb-2 block">Ability Score Improvement</Label>
+                    <p className="text-sm text-muted-foreground mb-3">
+                      Choose an ability score to increase by +2, or select two different abilities for +1 each.
+                    </p>
                     <div className="space-y-2">
                       <div className="grid grid-cols-3 gap-2">
                         {["strength", "dexterity", "constitution", "intelligence", "wisdom", "charisma"].map(
@@ -243,17 +271,14 @@ export function LevelUpDialog({ characterId, currentLevel, onLevelUp }: LevelUpD
                   </div>
                 )}
 
-                {/* HP Gain Info */}
-                <Card className="bg-muted">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Hit Points</CardTitle>
-                  </CardHeader>
-                  <CardContent className="text-sm">
-                    <p>
-                      You will gain <strong>{levelingOptions.hitPointsGain} HP</strong> from leveling up.
-                    </p>
-                  </CardContent>
-                </Card>
+                {!levelingOptions.grantedSubclass && !levelingOptions.grantedASI && (
+                  <p className="text-sm text-muted-foreground">
+                    No subclass choices or ability score improvements at this level.
+                    {targetLevel === 4 || targetLevel === 8 || targetLevel === 12 || targetLevel === 16 || targetLevel === 19
+                      ? ""
+                      : " ASIs are granted at levels 4, 8, 12, 16, and 19."}
+                  </p>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -274,7 +299,7 @@ export function LevelUpDialog({ characterId, currentLevel, onLevelUp }: LevelUpD
                 Leveling Up...
               </>
             ) : (
-              "Confirm Level Up"
+              `Confirm Level Up to ${targetLevel}`
             )}
           </Button>
         </div>

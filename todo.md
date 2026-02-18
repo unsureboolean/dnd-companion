@@ -235,3 +235,10 @@
 - [ ] Show which memories were retrieved for each DM response (future enhancement)
 - [x] Integrate Memory Browser as a tab in campaign detail page
 - [x] Test Memory Browser functionality (22 tests passing)
+
+## Phase 18: Fix Leveling Past Level 2
+- [x] Investigate why characters cannot level past level 2 (stale targetLevel state in LevelUpDialog)
+- [x] Fix leveling logic to support full D&D 5e level progression (levels 1-20)
+- [x] Update/write tests for multi-level progression (13 tests)
+- [x] Verify leveling UI works for levels 3+
+- [x] Fix subclass level detection for classes that get subclass at level 1 or 2 (Cleric, Sorcerer, Warlock, Druid, Wizard)
