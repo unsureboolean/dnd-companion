@@ -242,3 +242,18 @@
 - [x] Update/write tests for multi-level progression (13 tests)
 - [x] Verify leveling UI works for levels 3+
 - [x] Fix subclass level detection for classes that get subclass at level 1 or 2 (Cleric, Sorcerer, Warlock, Druid, Wizard)
+
+## Phase 19: Comprehensive Level-Up System Overhaul
+- [x] Build full D&D 5e class progression data (spells known/prepared counts, cantrips known, spell slot tables per level)
+- [x] Add spellcasting class detection (full casters, half casters, third casters, non-casters)
+- [x] Refactor backend leveling router to return class-specific level-up choices
+- [x] Show new spell selections with correct number of spells to pick based on class rules
+- [x] Show new cantrip selections when class gains cantrips at that level
+- [x] Show subclass selection at the correct level per class
+- [x] Show ASI/Feat choice at levels 4, 8, 12, 16, 19 (with option to +2 one ability or +1 to two)
+- [x] Show new class features gained at the target level
+- [x] Add hit point roll option (roll hit die or take average)
+- [x] Rebuild LevelUpDialog as multi-step wizard with all applicable sections
+- [x] Apply all selections to character on confirm (spells, cantrips, subclass, ASI, HP, features)
+- [x] Write/update tests for the comprehensive leveling system (52 tests)
+- [x] Test full level-up flow in browser for multiple classes and levels
