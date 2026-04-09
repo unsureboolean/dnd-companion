@@ -257,3 +257,18 @@
 - [x] Apply all selections to character on confirm (spells, cantrips, subclass, ASI, HP, features)
 - [x] Write/update tests for the comprehensive leveling system (52 tests)
 - [x] Test full level-up flow in browser for multiple classes and levels
+
+## Phase 20: AI-Controlled Companion Characters in DM Engine
+- [x] Extend CharacterState interface with isAiControlled, personality, backstory, ideals, bonds, flaws fields
+- [x] Update state manager to load AI companion fields from database
+- [x] Modify DM system prompt to distinguish player character from AI companions
+- [x] Add companion action generation function to DM loop (dialogue, combat, skill, spell, movement, reaction)
+- [x] Generate in-character actions for each AI companion after DM narration
+- [x] Detect combat mode and adjust companion prompts for combat actions
+- [x] Return companionActions in DM engine router response
+- [x] Save companion actions as separate conversation entries in database
+- [x] Update campaign chat UI to display companion actions distinctly with color-coded badges
+- [x] Show companion name, class, and action type for each action
+- [x] Write comprehensive vitest tests for companion system (27 tests passing)
+- [ ] Test full flow with actual AI-controlled companion in campaign session
+- [ ] Verify companion actions appear in chat after DM narration
